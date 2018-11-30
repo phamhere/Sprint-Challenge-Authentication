@@ -15,12 +15,22 @@ module.exports = server => {
 function register(req, res) {
   // implement user registration
   const creds = req.body;
-  const hash = bcrypt.hashSync(creds.password, 14);
-  creds.password = hash;
-  db("users")
-    .insert(creds)
-    .then(id => res.status(201).json(id))
-    .catch(err => res.status(500).json(err));
+  if (creds.username && creds.password) {
+    const hash = bcrypt.hashSync(creds.password, 14);
+    creds.password = hash;
+    db("users")
+      .insert(creds)
+      .then(id =>
+        res.status(201).json({ message: "Registration Successful", id: id })
+      )
+      .catch(err =>
+        res.status(500).json({ message: "Error Registering", error: err })
+      );
+  } else {
+    res
+      .status(400)
+      .json({ message: "Please provide a username and password." });
+  }
 }
 
 function generateToken(user) {
@@ -49,14 +59,14 @@ function login(req, res) {
         res.status(401).json({ message: "You shall not pass!" });
       }
     })
-    .catch(err => res.status(500).json(err));
+    .catch(err =>
+      res.status(500).json({ message: "Error Logging In", error: err })
+    );
 }
 
 function getJokes(req, res) {
   axios
-    .get(
-      "https://08ad1pao69.execute-api.us-east-1.amazonaws.com/dev/random_ten"
-    )
+    .get("https://safe-falls-22549.herokuapp.com/random_ten")
     .then(response => {
       res.status(200).json(response.data);
     })
